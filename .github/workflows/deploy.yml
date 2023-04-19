@@ -7,7 +7,6 @@ on:
 jobs:
   build:
     name: Build Docker image
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     environment: gcp-prod
     env:
@@ -30,7 +29,6 @@ jobs:
 
   push:
     name: Push Docker image to Google Cloud Registry
-    if: github.event.pull_request.merged == true
     needs: build
     runs-on: ubuntu-latest
     environment: gcp-prod
@@ -59,7 +57,6 @@ jobs:
 
   deploy:
     name: Deploy Docker image on Google Cloud Run
-    if: github.event.pull_request.merged == true
     needs: push
     runs-on: ubuntu-latest
     environment: gcp-prod
