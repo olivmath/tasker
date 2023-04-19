@@ -9,7 +9,7 @@ jobs:
   build:
     name: Build Docker image
     runs-on: ubuntu-latest
-    environment: gcp-prod
+    environment: gcp-dev
     env:
       IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
     steps:
