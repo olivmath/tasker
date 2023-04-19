@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: gcp-prod
     env:
-      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
+      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/app:latest
     steps:
       - name: Git checkout
         uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: gcp-prod
     env:
-      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
+      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/app:latest
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v2
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: gcp-prod
     env:
-      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
+      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/app:latest
     steps:
       - name: Login to GCP
         uses: google-github-actions/setup-gcloud@v0.2.0
