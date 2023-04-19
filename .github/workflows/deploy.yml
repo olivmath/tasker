@@ -1,4 +1,4 @@
-name: GCP
+name: Deploy Tasker to Google Cloud
 
 on:
   pull_request:
@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     name: Build Docker image
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
