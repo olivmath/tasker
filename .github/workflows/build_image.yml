@@ -1,0 +1,20 @@
+name: Build Image Docker
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    environment: gcp-dev
+    env:
+      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME .
