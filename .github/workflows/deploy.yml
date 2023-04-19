@@ -12,28 +12,23 @@ jobs:
     env:
       IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
     steps:
-      # Git checkout
-      - name: Checkout
+      - name: Git checkout
         uses: actions/checkout@v2
 
-      # Login to GCP
+      - name: Login to GCP
       - uses: google-github-actions/setup-gcloud@v0.2.0
         with:
           service_account_key: ${{ secrets.GCP_CREDENTIALS }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # gcloud configure docker
-      - name: Configure Docker
+      - name: Google Cloud Configure Docker
         run: gcloud auth configure-docker --quiet
 
-      # build image
       - name: Build Docker image
         run: docker build -t $IMAGE_NAME .
 
-      # push image to registry
-      - name: Push Docker image
+      - name: Push Docker image to Google Cloud Registry
         run: docker push $IMAGE_NAME
 
-      # deploy image
-      - name: Deploy Docker image
+      - name: Deploy Docker image on Google Cloud Run
         run: gcloud run deploy site --image $IMAGE_NAME --region us-central1 --memory 128Mi --min-instances 0 --max-instances 1 --platform managed --port 3000 --allow-unauthenticated
