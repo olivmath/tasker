@@ -1,22 +1,51 @@
 name: GCP
 
 on:
-  push:
+  pull_request:
     branches: [main]
+    types: [closed]
 
 jobs:
-  deploy:
-    name: Setup Gcloud Account
+  build:
+    name: Build Docker image
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    environment: hw-prod
     env:
       IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
     steps:
       - name: Git checkout
         uses: actions/checkout@v2
 
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME .
+
+      - name: Save Docker image
+        run: docker save $IMAGE_NAME > image.tar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker-image
+          path: image.tar
+
+  push:
+    name: Push Docker image to Google Cloud Registry
+    if: github.event.pull_request.merged == true
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: docker-image
+
+      - name: Load Docker image
+        run: docker load < image.tar
+
       - name: Login to GCP
-      - uses: google-github-actions/setup-gcloud@v0.2.0
+        uses: google-github-actions/setup-gcloud@v0.2.0
         with:
           service_account_key: ${{ secrets.GCP_CREDENTIALS }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
@@ -24,11 +53,22 @@ jobs:
       - name: Google Cloud Configure Docker
         run: gcloud auth configure-docker --quiet
 
-      - name: Build Docker image
-        run: docker build -t $IMAGE_NAME .
-
       - name: Push Docker image to Google Cloud Registry
         run: docker push $IMAGE_NAME
+
+  deploy:
+    name: Deploy Docker image on Google Cloud Run
+    if: github.event.pull_request.merged == true
+    needs: push
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
+    steps:
+      - name: Login to GCP
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Deploy Docker image on Google Cloud Run
         run: gcloud run deploy site --image $IMAGE_NAME --region us-central1 --memory 128Mi --min-instances 0 --max-instances 1 --platform managed --port 3000 --allow-unauthenticated
