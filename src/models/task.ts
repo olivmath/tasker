@@ -1,9 +1,11 @@
+import {v4 as uuid } from 'uuid'
+
 export default interface Task {
-  id: number;
+  id: string;
   name: string;
   done: boolean;
 }
 
-export function generateId(): number {
-  return new Date().getTime();
+export function generateId(): string {
+  return uuid();
 }
