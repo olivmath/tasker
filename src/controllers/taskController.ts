@@ -1,34 +1,31 @@
-import { Request, Response } from "express";
 import Task, { generateId } from "../models/task";
+import { Request, Response } from "express";
+import adapter from "../database/adapter";
 
-let tasks: Task[] = [];
+(async () => {
+  await adapter.connect();
+  await adapter.createTaskTable();
+})();
 
-function findTaskById(id: number): Task | undefined {
-  return tasks.find((task) => task.id === id);
-}
-
-function handleTaskNotFound(res: Response): void {
-  res.status(404).json({ message: "Task not found" });
-}
-
-export function listTasks(_req: Request, res: Response) {
+export async function listTasks(_req: Request, res: Response) {
+  const tasks = await adapter.findAllTasks();
   res.json(tasks);
 }
 
-export function createTask(req: Request, res: Response) {
+export async function createTask(req: Request, res: Response) {
   const task: Task = {
     id: generateId(),
     name: req.body.name,
     done: false,
   };
 
-  tasks.push(task);
+  await adapter.insertTask(task);
   res.status(201).json(task);
 }
 
-export function getTask(req: Request, res: Response) {
+export async function getTask(req: Request, res: Response) {
   const id = parseInt(req.params.id);
-  const task = findTaskById(id);
+  const task = await adapter.findTaskById(id);
 
   if (!task) {
     return handleTaskNotFound(res);
@@ -37,21 +34,22 @@ export function getTask(req: Request, res: Response) {
   res.json(task);
 }
 
-export function doneTask(req: Request, res: Response) {
+export async function doneTask(req: Request, res: Response) {
   const id = parseInt(req.params.id);
-  const task = findTaskById(id);
+  const task = await adapter.findTaskById(id);
 
   if (!task) {
     return handleTaskNotFound(res);
   }
 
   task.done = true;
+  await adapter.updateTask(task);
   res.json(task);
 }
 
-export function updateTask(req: Request, res: Response) {
+export async function updateTask(req: Request, res: Response) {
   const id = parseInt(req.params.id);
-  const task = findTaskById(id);
+  const task = await adapter.findTaskById(id);
 
   if (!task) {
     return handleTaskNotFound(res);
@@ -59,17 +57,22 @@ export function updateTask(req: Request, res: Response) {
 
   task.name = req.body.name || task.name;
   task.done = req.body.done ?? task.done;
+  await adapter.updateTask(task);
   res.json(task);
 }
 
-export function deleteTask(req: Request, res: Response) {
+export async function deleteTask(req: Request, res: Response) {
   const id = parseInt(req.params.id);
-  const taskIndex = tasks.findIndex((task) => task.id === id);
+  const task = await adapter.findTaskById(id);
 
-  if (taskIndex === -1) {
+  if (!task) {
     return handleTaskNotFound(res);
   }
 
-  tasks.splice(taskIndex, 1);
+  await adapter.deleteTask(id);
   res.status(204).end();
+}
+
+function handleTaskNotFound(res: Response): void {
+  res.status(404).json({ message: "Task not found" });
 }
