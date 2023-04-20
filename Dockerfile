@@ -1,32 +1,29 @@
-# Use a specific Node version
+# Pin specific version
+# Use alpine for reduced image size
 FROM node:19.9-alpine3.17 AS base
 
-# Set NODE_ENV to production
-ENV NODE_ENV=production
+# Set NODE ENV
+ENV NODE_ ENV production
 
-# Specify working directory
+# Specify working directory other than
 WORKDIR /usr/src/app
 
-# Copy only files required to install dependencies
+# Copu only files required to instal
+# dependencies (better layer caching)
 COPY package*.json ./
 
 # Install dependencies
-RUN yarn install --production --frozen-lockfile
+RUN yarn
 
-# Build TypeScript
-FROM base AS build
-COPY . .
-RUN yarn build
+# Copy remaining source code AFTER installing dependencies.
+# Again, copy only the necessarv files
+COPY --chown=node:node ./src/ ./src/
 
 # Use non-root user
+# Use --chown on COPY commands to set file permissions
 USER node
 
 # Indicate expected port
 EXPOSE 3000
 
-# Copy build output
-FROM base AS release
-COPY --from=build --chown=node:node /usr/src/app/dist ./dist
-
-# Start the application
 CMD [ "yarn", "start" ]
